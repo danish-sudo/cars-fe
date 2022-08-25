@@ -9,16 +9,15 @@ import List from "@mui/material/List";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import Badge from "@mui/material/Badge";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import LogoutIcon from "@mui/icons-material/Logout";
 import {
   categoryListItems,
   mainListItems,
   secondaryListItems,
 } from "./listItems";
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -89,11 +88,15 @@ const MainStyle = styled("div")(({ theme }) => ({
 const mdTheme = createTheme();
 
 function DashboardContent() {
+  const navigate = useNavigate();
   const [open, setOpen] = React.useState(true);
   const toggleDrawer = () => {
     setOpen(!open);
   };
-
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
   return (
     <RootStyle>
       <ThemeProvider theme={mdTheme}>
@@ -126,10 +129,8 @@ function DashboardContent() {
               >
                 Dashboard
               </Typography>
-              <IconButton color="inherit">
-                <Badge badgeContent={4} color="secondary">
-                  <NotificationsIcon />
-                </Badge>
+              <IconButton color="inherit" onClick={handleLogout}>
+                <LogoutIcon />
               </IconButton>
             </Toolbar>
           </AppBar>

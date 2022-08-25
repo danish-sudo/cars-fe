@@ -4,13 +4,17 @@ import TextField from "@mui/material/TextField";
 import { Form, FormikProvider, useFormik } from "formik";
 import axios from "axios";
 import { Button, Grid, MenuItem, Typography } from "@mui/material";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import Helmet from "react-helmet";
 import { useEffect, useState } from "react";
+import { setCars } from "../../redux/cars";
 
 export default function CarsConfig() {
   let { id } = useParams();
+  const dispatch = useDispatch();
+  const carCount = useSelector((state) => state.cars.value.total);
+
   const CarsSchema = Yup.object().shape({
     color: Yup.string().required("Field is required"),
     model: Yup.string().required("Field is required"),
@@ -85,6 +89,7 @@ export default function CarsConfig() {
           formik.values,
           { headers }
         );
+        dispatch(setCars({ total: carCount + 1 }));
       }
       if (response.data.success) {
         navigate("/dashboard/cars/list");
