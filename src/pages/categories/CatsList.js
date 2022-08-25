@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { useSelector } from "react-redux";
+import Helmet from "react-helmet";
+import { IconButton } from "@mui/material";
+import { Delete, Update } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 export default function CatsList() {
   const [data, setData] = useState([]);
@@ -9,7 +13,8 @@ export default function CatsList() {
   const [totalRows, setTotalRows] = useState(0);
   const [perPage, setPerPage] = useState(10);
 
-  const fetchUsers = async (page) => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchUsers = useCallback(async (page) => {
     setLoading(true);
 
     const response = await axios.get(
@@ -21,7 +26,7 @@ export default function CatsList() {
     setData(response.data.data);
     setTotalRows(response.data.total);
     setLoading(false);
-  };
+  });
 
   const handlePageChange = (page) => {
     fetchUsers(page);
@@ -89,20 +94,70 @@ export default function CatsList() {
       sortField: "updatedAt",
     },
   ];
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [toggleCleared, setToggleCleared] = useState(false);
+
+  const handleRowSelected = useCallback((state) => {
+    setSelectedRows(state.selectedRows);
+  }, []);
+  const navigate = useNavigate();
+  const contextActions = useMemo(() => {
+    const handleDelete = async () => {
+      if (
+        window.confirm(
+          `Are you sure you want to delete Cats with Type/s:\r ${selectedRows.map(
+            (r) => r.type
+          )}?`
+        )
+      ) {
+        setToggleCleared(!toggleCleared);
+        selectedRows.forEach(async (element) => {
+          console.log(element);
+          await axios.delete(`http://localhost:1338/api/cats/${element._id}`, {
+            headers,
+          });
+        });
+        fetchUsers(0);
+      }
+    };
+    const handleUpdate = async () => {
+      navigate(`/dashboard/categories/edit/${selectedRows[0]._id}`);
+    };
+
+    return (
+      <>
+        <IconButton onClick={handleDelete}>
+          <Delete />
+        </IconButton>
+        <IconButton onClick={handleUpdate}>
+          <Update />
+        </IconButton>
+      </>
+    );
+  }, [fetchUsers, headers, navigate, selectedRows, toggleCleared]);
   return (
-    <DataTable
-      title="Car Categories"
-      columns={columns}
-      data={data}
-      progressPending={loading}
-      pagination
-      sortServer
-      persistTableHead
-      onSort={handleSort}
-      paginationServer
-      paginationTotalRows={totalRows}
-      onChangeRowsPerPage={handlePerRowsChange}
-      onChangePage={handlePageChange}
-    />
+    <>
+      <Helmet>
+        <title>Categories List</title>
+      </Helmet>
+      <DataTable
+        title="Categories List"
+        columns={columns}
+        data={data}
+        progressPending={loading}
+        pagination
+        sortServer
+        persistTableHead
+        selectableRows
+        contextActions={contextActions}
+        onSelectedRowsChange={handleRowSelected}
+        clearSelectedRows={toggleCleared}
+        onSort={handleSort}
+        paginationServer
+        paginationTotalRows={totalRows}
+        onChangeRowsPerPage={handlePerRowsChange}
+        onChangePage={handlePageChange}
+      />
+    </>
   );
 }
